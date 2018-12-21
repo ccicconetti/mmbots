@@ -12,7 +12,7 @@ Assume Alice and Bob ordered a meal together. Alice bought a 10$ pizza and Bob t
 
 The bot response renders as:
 
-    ![Bot response](/path/to/image.jpg)
+![Bot response](doc/bot_response.png)
 
 If you want to try without installing on MatterMost, on one terminal run:
 
