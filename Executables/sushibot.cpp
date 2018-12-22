@@ -1,3 +1,26 @@
+/*
+Licensed under the MIT License <http://opensource.org/licenses/MIT>.
+Copyright (c) 2018 Claudio Cicconetti <https://about.me/ccicconetti>
+
+Permission is hereby  granted, free of charge, to any  person obtaining a copy
+of this software and associated  documentation files (the "Software"), to deal
+in the Software  without restriction, including without  limitation the rights
+to  use, copy,  modify, merge,  publish, distribute,  sublicense, and/or  sell
+copies  of  the Software,  and  to  permit persons  to  whom  the Software  is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE  IS PROVIDED "AS  IS", WITHOUT WARRANTY  OF ANY KIND,  EXPRESS OR
+IMPLIED,  INCLUDING BUT  NOT  LIMITED TO  THE  WARRANTIES OF  MERCHANTABILITY,
+FITNESS FOR  A PARTICULAR PURPOSE AND  NONINFRINGEMENT. IN NO EVENT  SHALL THE
+AUTHORS  OR COPYRIGHT  HOLDERS  BE  LIABLE FOR  ANY  CLAIM,  DAMAGES OR  OTHER
+LIABILITY, WHETHER IN AN ACTION OF  CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE  OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
 #include "Rest/server.h"
 #include "Support/glograii.h"
 #include "Support/macros.h"
@@ -19,20 +42,17 @@
 
 namespace po = boost::program_options;
 
-class SushiServer : public uiiit::rest::Server
-{
+class SushiServer : public uiiit::rest::Server {
   NONCOPYABLE_NONMOVABLE(SushiServer);
 
- public:
-  explicit SushiServer(const std::string& aUri, const std::string& aToken)
-      : uiiit::rest::Server(aUri)
-      , theToken(aToken) {
-    (*this)(web::http::methods::POST,
-            "(.*)",
+public:
+  explicit SushiServer(const std::string &aUri, const std::string &aToken)
+      : uiiit::rest::Server(aUri), theToken(aToken) {
+    (*this)(web::http::methods::POST, "(.*)",
             [this](web::http::http_request aReq) { handleSushi(aReq); });
   }
 
- private:
+private:
   void handleSushi(web::http::http_request aReq) {
     std::string myBody;
     aReq.extract_string()
@@ -58,14 +78,14 @@ class SushiServer : public uiiit::rest::Server
     // clang-format on
     const auto myPairs =
         uiiit::support::split<std::list<std::string>>(myBody, "&");
-    auto                         myAuthorized    = false;
-    auto                         myValid         = true;
-    auto                         myHelpRequested = false;
-    auto                         myDiscount      = 0.0f;
-    auto                         myDelivery      = 0.0f;
-    std::string                  myText;
+    auto myAuthorized = false;
+    auto myValid = true;
+    auto myHelpRequested = false;
+    auto myDiscount = 0.0f;
+    auto myDelivery = 0.0f;
+    std::string myText;
     std::map<std::string, float> myPayments;
-    for (const auto& myElem : myPairs) {
+    for (const auto &myElem : myPairs) {
       const auto myPair =
           uiiit::support::split<std::list<std::string>>(myElem, "=");
       if (myPair.size() != 2) {
@@ -81,7 +101,7 @@ class SushiServer : public uiiit::rest::Server
           continue;
         }
         std::string myLastPayer;
-        for (const auto& myElem : uiiit::support::split<std::list<std::string>>(
+        for (const auto &myElem : uiiit::support::split<std::list<std::string>>(
                  myPair.back(), "+")) {
           try {
             const auto myNumber = std::stof(myElem);
@@ -109,10 +129,10 @@ class SushiServer : public uiiit::rest::Server
       const auto myLower = boost::algorithm::to_lower_copy(it->first);
       if (myLower == "discount") {
         myDiscount = it->second;
-        it         = myPayments.erase(it);
+        it = myPayments.erase(it);
       } else if (myLower == "delivery") {
         myDelivery = it->second;
-        it         = myPayments.erase(it);
+        it = myPayments.erase(it);
       } else {
         ++it;
       }
@@ -133,12 +153,12 @@ class SushiServer : public uiiit::rest::Server
         myValue["text"] = web::json::value(myHelp);
       } else if (myValid) {
         auto myTot = 0.0f;
-        for (const auto& myPair : myPayments) {
+        for (const auto &myPair : myPayments) {
           myTot += myPair.second;
         }
-        auto                         myTotAssigned = 0.0f;
+        auto myTotAssigned = 0.0f;
         std::map<std::string, float> myPaymentsDiscounted;
-        for (const auto& myPair : myPayments) {
+        for (const auto &myPair : myPayments) {
           const auto myPayment =
               myPair.second * (1 - myDiscount) + myDelivery / myPayments.size();
           myPaymentsDiscounted.insert({myPair.first, myPayment});
@@ -153,15 +173,15 @@ class SushiServer : public uiiit::rest::Server
         myTable(0, 1, "How much");
 
         std::string myResp;
-        size_t      myRow = 1;
-        for (const auto& myPair : myPaymentsDiscounted) {
+        size_t myRow = 1;
+        for (const auto &myPair : myPaymentsDiscounted) {
           std::stringstream myStream;
           myStream << std::fixed << std::setprecision(2) << myPair.second;
           myTable(myRow, 0, myPair.first);
           myTable(myRow, 1, myStream.str());
           myRow++;
         }
-        const auto        myBill = (1 - myDiscount) * myTot + myDelivery;
+        const auto myBill = (1 - myDiscount) * myTot + myDelivery;
         std::stringstream myStream;
         myStream << std::fixed << std::setprecision(2) << myBill;
         myTable(myRow, 0, "** Total **");
@@ -169,7 +189,7 @@ class SushiServer : public uiiit::rest::Server
         myResp += myTable.toString() + "_Bon appetit!_";
 
         myValue["response_type"] = web::json::value("in_channel");
-        myValue["text"]          = web::json::value(myResp);
+        myValue["text"] = web::json::value(myResp);
       } else {
         myValue["text"] = web::json::value("invalid request: " + myText +
                                            "\ntry `/sushi help`");
@@ -182,15 +202,15 @@ class SushiServer : public uiiit::rest::Server
     }
   }
 
- private:
+private:
   const std::string theToken;
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   uiiit::support::GlogRaii myGlogRaii(argv[0]);
 
   try {
-    po::options_description   myDesc("Allowed options");
+    po::options_description myDesc("Allowed options");
     uiiit::support::MmOptions myCli(argc, argv, myDesc);
 
     if (myCli.token().empty()) {
@@ -202,9 +222,9 @@ int main(int argc, char* argv[]) {
     pause();
 
     return EXIT_SUCCESS;
-  } catch (const uiiit::support::CliExit&) {
+  } catch (const uiiit::support::CliExit &) {
     return EXIT_SUCCESS; // clean exit
-  } catch (const std::exception& aErr) {
+  } catch (const std::exception &aErr) {
     LOG(ERROR) << "Exception caught: " << aErr.what();
   } catch (...) {
     LOG(ERROR) << "Unknown exception caught";
