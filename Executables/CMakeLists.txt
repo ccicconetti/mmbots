@@ -31,3 +31,14 @@ target_link_libraries(phonebot
   ${Boost_LIBRARIES}
 )
 
+add_executable(responderbot
+  ${CMAKE_CURRENT_SOURCE_DIR}/responderbot.cpp
+)
+
+target_link_libraries(responderbot
+  uiiitrest
+  uiiitsupport
+  ${GLOG}
+  ${Boost_LIBRARIES}
+)
+
