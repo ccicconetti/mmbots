@@ -183,7 +183,7 @@ class CoffeeServer : public uiiit::rest::Server
     }
 
     auto myIsNumber = true;
-    int  myNumber;
+    int  myNumber = 0;
     try {
       myNumber = std::stoi(myText);
     } catch (...) {
