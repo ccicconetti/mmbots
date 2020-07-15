@@ -81,12 +81,18 @@ class PersDic(object):
         ----------
 
         key : str
-            The key of the pair to be removed
+            The key of the pair to be removed.
+
+        Return
+        ------
+           True if the entry was delete, False otherwise.
         """
 
         with self._lock:
             if self._content.pop(key, None):
                 self._serialize()
+                return True
+            return False
 
     def _serialize(self):
         """Write the dictionary to file"""
@@ -118,7 +124,8 @@ if __name__ == '__main__':
     pers_dic = PersDic(args.file)
     
     if args.delete:
-        pers_dic.delete(args.delete)
+        removed = 'removed' if pers_dic.delete(args.delete) else 'not found'
+        print(f'Element \'{args.delete}\': {removed}')
 
     if args.add:
         key, value = args.add.split(':')
