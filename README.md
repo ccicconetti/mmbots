@@ -2,6 +2,8 @@
 
 Implementation of very simple bots responding to [Mattermost](https://mattermost.com/) slash commands.
 
+The documentation below only applies to the C++ bots, for those in Python see [here](Python/README.md).
+
 ## Build instructions
 
 First, make sure you have [CMake](https://cmake.org/) (version >= 3.2), a recent C++ compiler and all the dependencies installed:
