@@ -76,7 +76,10 @@ def cerino(text):
         error = True
 
     else:
-        response = f"CerinoBot has selected: {random.choice(tokens)}"
+        response = (
+            f"Out of the following candidates: {','.join(tokens)}\n"
+            f"CerinoBot has selected: {random.choice(tokens)}"
+        )
         private = False
 
     # else:
