@@ -18,6 +18,7 @@ from urllib.parse import parse_qs
 import json
 import argparse
 import random
+import re
 
 from mattermostrequest import MattermostRequest
 
@@ -25,6 +26,19 @@ token = None
 
 # guarantee unicode string
 _u = lambda t: t.decode("UTF-8", "replace") if isinstance(t, str) else t
+
+DIGITS = {
+    "0": ":zero:",
+    "1": ":one:",
+    "2": ":two:",
+    "3": ":three:",
+    "4": ":four:",
+    "5": ":five:",
+    "6": ":six:",
+    "7": ":seven:",
+    "8": ":eight:",
+    "9": ":nine:",
+}
 
 
 class PostHandler(BaseHTTPRequestHandler):
@@ -61,6 +75,13 @@ class PostHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 
+def digitToEmoji(num: int) -> str:
+    ret = ""
+    for digit in str(num):
+        ret += DIGITS[digit]
+    return ret
+
+
 def cerino(text):
     """Return the response to be returned to the MM server and whether it should be private"""
 
@@ -69,18 +90,48 @@ def cerino(text):
 
     response = None
     error = False
-    private = True
 
-    if len(tokens) == 1 or tokens[0] == "help":
-        response = "Return a random element from a set"
-        error = True
+    if len(tokens) == 1:
+        if tokens[0] == "help":
+            response = "Return a random element from a set"
+            error = True
+        elif tokens[0] == "die":
+            response = (
+                f"The roll of a :game_die: gave: {digitToEmoji(random.randint(1, 6))}"
+            )
+        elif tokens[0] == "coin":
+            response = f"The toss of a coin gave: {random.choice(['head', 'tail'])}"
+        elif tokens[0][0:2].upper() == "U(":
+            try:
+                subtokens = re.split(r"[U(),]", tokens[0], flags=re.IGNORECASE)
+                A = None
+                B = None
+                for tok in subtokens:
+                    if tok == "":
+                        continue
+                    if A is None:
+                        A = int(tok)
+                    elif B is None:
+                        B = int(tok)
+                    else:
+                        raise RuntimeError(f"Invalid input: {tokens[0]}")
+                if A is None or B is None:
+                    raise RuntimeError(f"Invalid input: {tokens[0]}")
+                response = f"Drawing a random number in [{A},{B}] gave: {digitToEmoji(random.randint(A, B))}"
+            except Exception as e:
+                error = True
+                response = f"Error in request: {e}"
+        elif tokens[0] == "bingo":
+            response = f"The following number was called: {digitToEmoji(random.randint(1, 90))}"
+        else:
+            response = f"Invalid command: {tokens[0]}"
+            error = True
 
     else:
         response = (
             f"Out of the following candidates: {','.join(tokens)}\n"
             f"CerinoBot has selected: {random.choice(tokens)}"
         )
-        private = False
 
     # else:
     #     error = True
@@ -94,15 +145,23 @@ def cerino(text):
                 f"{response}\n"
                 "\n"
                 "Commands:\n"
-                "- `/cerino help`\n"
+                "- `/cerino help`:"
                 "shows this help\n"
-                "- `/cerino X Y Z ...`\n"
+                "- `/cerino X Y Z ...`: "
                 "return one random element from those passed\n"
+                "- `/cerino die`: "
+                "return a random number from 1 to 6\n"
+                "- `/cerino coin`: "
+                "return the outcome of a coin toss\n"
+                "- `/cerino U(A,B)`: "
+                "return an integer between `A` and `B`\n"
+                "- `/cerino bingo`: "
+                "return an integer between 1 and 90\n"
             ),
             True,
         ]
 
-    return [response, private]
+    return [response, False]
 
 
 if __name__ == "__main__":
