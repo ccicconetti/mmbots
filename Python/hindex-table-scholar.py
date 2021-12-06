@@ -1,30 +1,26 @@
 #!/usr/bin/env python3
 """
-Read a names from a semicolor-separated list in a file and queries
-Elsevier Scopus via HTTP APIs to retrieve and plot (in an ASCII-art table)
-the result.
+Read a names from a semicolor-separated list in a file and plot (in an ASCII-art table) the result.
 
 Example:
 
 1. create the input file, e.g.:
 
-echo "Einstein;Albert;Genius;22988279600" > myexample
+echo "Einstein;Albert;Genius;22988279600;120" > myexample
 
 2. execute the script as follows:
 
-./hindex-table.py --input myexample
+./hindex-table-scholar.py --input myexample
 
 It will print:
 
-Einstein A. (Genius)  ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 41
+Einstein A. (Genius)  ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 120
 """
 
 import argparse
 import random
 from operator import itemgetter
 
-import pandas as pd
-# from pybliometrics.scopus import AuthorRetrieval, AuthorSearch
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -49,13 +45,14 @@ if __name__ == "__main__":
                     for firstname in tokens[1].split(" "):
                         initials.append(firstname[0] + ".")
 
-                    hindex = int(tokens[4])
+                    if args.fake:
+                        hindex = int(random.expovariate(1 / 20.0))
+                    else:
+                        hindex = int(tokens[4])
 
                     fullname = tokens[0] + " " + " ".join(initials)
                     largest_name = max(largest_name, len(fullname))
                     largest_title = max(largest_title, len(tokens[2]))
-                    # print([fullname, tokens[2], hindex])
-                    # print(largest_name, largest_title)
                     names.append([fullname, tokens[2], hindex])
 
         for name in sorted(names, key=itemgetter(2), reverse=True):
