@@ -61,7 +61,17 @@ class PostHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
 
-def getcce(text):
+def toFullName(text: str):
+    ret = ""
+    tokens = text.split(".")
+    for i, token in zip(range(len(tokens)), tokens):
+        if i > 0:
+            ret += " "
+        ret += token.capitalize()
+    return ret
+
+
+def getcce(text: str):
     """Return the response to be returned to the MM server and whether it should be private"""
 
     tokens = text.split(" ")
@@ -76,13 +86,24 @@ def getcce(text):
         error = True
 
     else:
+        candidates = list()
         for candidate in names:
             if tokens[0].lower() in candidate:
-                response = f"![](https://www.iit.cnr.it/wp-content/themes/cnr/foto_personali_400/{candidate}.jpg)"
-                private = False
+                candidates.append(candidate)
 
-        if response is None:
+        if len(candidates) == 0:
             response = f"Could not find an IIT member matching: {tokens[0]}"
+
+        elif len(candidates) == 1:
+            response = (
+                f"{toFullName(candidates[0])} :point_down: "
+                f"![](https://www.iit.cnr.it/wp-content/themes/cnr/foto_personali_400/{candidates[0]}.jpg)"
+            )
+            private = False
+
+        else:
+            assert len(candidates) > 1
+            response = f"Too many matching names:\n" + "\n".join(candidates)
 
     # Return the error / correct response
 
